@@ -19,7 +19,6 @@ export function loadOrCreateHolder(address: Address): Holder {
   let holder = Holder.load(address.toHex());
   if (!holder) {
     holder = new Holder(address.toHex());
-    holder.account = address;
   }
   if (address != Address.zero()) {
     // Skip creation of burn address holder.
@@ -29,7 +28,7 @@ export function loadOrCreateHolder(address: Address): Holder {
 }
 
 export function saveNonZero(holder: Holder): void {
-  if (holder.account != Address.zero()) {
+  if (holder.id != Address.zero().toHex()) {
     holder.save();
   } else {
     log.info("Excluded Null address from internal!", []);
