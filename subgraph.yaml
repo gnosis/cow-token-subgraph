@@ -1,4 +1,4 @@
-specVersion: 0.0.1
+specVersion: 0.0.2
 schema:
   file: ./schema.graphql
 dataSources:
@@ -8,6 +8,7 @@ dataSources:
     source:
       address: "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB"
       abi: CowProtocolToken
+      startBlock: 14186722
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
