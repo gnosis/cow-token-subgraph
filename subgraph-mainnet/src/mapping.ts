@@ -8,8 +8,7 @@ export const NON_CIRCULATING = [
   Address.fromString("0xcA771eda0c70aA7d053aB1B25004559B918FE662"),
   // Vested tokens (vCOW token address)
   Address.fromString("0xD057B63f5E69CF1B929b356b579Cba08D7688048"),
-  // Solver Rewards
-  Address.fromString("0xA03be496e67Ec29bC62F01a428683D7F9c204930"),
+  // TODO - add GnosisDAO Vesting contract
 ];
 
 export function loadOrCreateHolder(address: Address): Holder {
@@ -51,11 +50,6 @@ export function supplyTriggeringTransfer(from: Address, to: Address): bool {
 }
 
 export function updateSupply(from: Address, to: Address, amount: BigInt): void {
-  log.info("Token Supply update {} moved from {} to {}", [
-    amount.toString(),
-    from.toHex(),
-    to.toHex(),
-  ]);
   const supply = loadOrCreateSupply();
   if (from == Address.zero()) {
     log.info("Token Minted {}", [amount.toString()]);
