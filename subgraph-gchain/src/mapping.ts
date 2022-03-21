@@ -2,15 +2,9 @@ import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 import { Transfer } from "../generated/CowProtocolToken/CowProtocolToken";
 import { Holder, Supply } from "../generated/schema";
 
-export const COW_TOKEN = "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB";
-export const NON_CIRCULATING = [
-  // CoW DAO Safe
-  Address.fromString("0xcA771eda0c70aA7d053aB1B25004559B918FE662"),
-  // Vested tokens (vCOW token address)
-  Address.fromString("0xD057B63f5E69CF1B929b356b579Cba08D7688048"),
-  // Solver Rewards
-  Address.fromString("0xA03be496e67Ec29bC62F01a428683D7F9c204930"),
-];
+export const COW_ADDRESS_STRING = "0x177127622c4A00F3d409B75571e12cB3c8973d3c";
+export const VCOW_ADDRESS_STRING = "0xc20C9C13E853fc64d054b73fF21d3636B2d97eaB";
+export const VCOW_TOKEN = Address.fromString(VCOW_ADDRESS_STRING);
 
 export function loadOrCreateHolder(address: Address): Holder {
   let holder = Holder.load(address.toHex());
@@ -32,30 +26,22 @@ export function saveNonZero(holder: Holder): void {
 }
 
 export function loadOrCreateSupply(): Supply {
-  let supply = Supply.load(COW_TOKEN);
+  let supply = Supply.load(COW_ADDRESS_STRING);
   if (!supply) {
     // This will only ever happen once!
-    supply = new Supply(COW_TOKEN);
+    supply = new Supply(COW_ADDRESS_STRING);
   }
   supply.save();
   return supply;
 }
 
 export function supplyTriggeringTransfer(from: Address, to: Address): bool {
-  const zero = Address.zero();
-  const mintOrBurn = from == zero || to == zero;
-  const involvesIgnoredAccounts =
-    NON_CIRCULATING.includes(from) || NON_CIRCULATING.includes(to);
-
-  return mintOrBurn || involvesIgnoredAccounts;
+  const mintOrBurn = from == Address.zero() || to == Address.zero();
+  const involvesVestingContract = VCOW_TOKEN == from || VCOW_TOKEN == to;
+  return mintOrBurn || involvesVestingContract;
 }
 
 export function updateSupply(from: Address, to: Address, amount: BigInt): void {
-  log.info("Token Supply update {} moved from {} to {}", [
-    amount.toString(),
-    from.toHex(),
-    to.toHex(),
-  ]);
   const supply = loadOrCreateSupply();
   if (from == Address.zero()) {
     log.info("Token Minted {}", [amount.toString()]);
@@ -68,12 +54,12 @@ export function updateSupply(from: Address, to: Address, amount: BigInt): void {
     supply.circulating = supply.circulating.minus(amount);
   }
 
-  if (NON_CIRCULATING.includes(from)) {
+  if (from == VCOW_TOKEN) {
     log.info("Circulating Supply Increase {}", [amount.toString()]);
     supply.circulating = supply.circulating.plus(amount);
   }
 
-  if (NON_CIRCULATING.includes(to)) {
+  if (to == VCOW_TOKEN) {
     log.info("Circulating Supply Decrease {}", [amount.toString()]);
     supply.circulating = supply.circulating.minus(amount);
   }
