@@ -17,5 +17,5 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
-      - run: Mainnet Subgraph
-          cd mainnet-subgraph && yarn --frozen-lockfile && yarn build && yarn test
+      - name: Mainnet Subgraph
+          run: (cd mainnet-subgraph && yarn --frozen-lockfile && yarn build && yarn test)
