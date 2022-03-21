@@ -18,4 +18,4 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Mainnet Subgraph
-          run: (cd mainnet-subgraph && yarn --frozen-lockfile && yarn build && yarn test)
+        run: (cd mainnet-subgraph && yarn --frozen-lockfile && yarn build && yarn test)
