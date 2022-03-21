@@ -6,8 +6,8 @@ export const COW_TOKEN = "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB";
 const NON_CIRCULATING_MAINNET = [
   // CoW DAO Safe
   Address.fromString("0xcA771eda0c70aA7d053aB1B25004559B918FE662"),
-  // Gchain Vested tokens (vCOW token address)
-  Address.fromString("0xc20C9C13E853fc64d054b73fF21d3636B2d97eaB"),
+  // Vested tokens (vCOW token address)
+  Address.fromString("0xD057B63f5E69CF1B929b356b579Cba08D7688048"),
   // TODO - add GnosisDAO Vesting contract Mainnet
 ];
 
