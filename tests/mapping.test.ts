@@ -237,7 +237,7 @@ test("Transfers between non-circulating supply update balances and do not affect
 
 test("Transfers from non-circulating to regular accounts supply update balances and update supply", () => {
   const testStore = setupStore();
-  const circulatingSupply = testStore.supply.circulating.toString();
+  const circulatingSupply = testStore.supply.circulating;
   const totalSupply = testStore.supply.total.toString();
   const amount = BigInt.fromI32(500);
   const regularTransfer = mockTransferEvent(
@@ -256,13 +256,19 @@ test("Transfers from non-circulating to regular accounts supply update balances 
   );
   assert.fieldEquals(
     "Holder",
-    NON_CIRCULATING[1].toHex(),
+    REGULAR_ACCOUNT[1].toHex(),
     "balance",
     amount.toString()
   );
-  // Supply Unchanged
-  assert.fieldEquals("Supply", COW_TOKEN, "circulating", circulatingSupply);
+  // Total Supply Unchanged
   assert.fieldEquals("Supply", COW_TOKEN, "total", totalSupply);
+  // Circulating supply increase
+  assert.fieldEquals(
+    "Supply",
+    COW_TOKEN,
+    "circulating",
+    circulatingSupply.plus(amount).toString()
+  );
 
   clearStore();
 });
