@@ -1,0 +1,24 @@
+specVersion: 0.0.2
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: CowProtocolToken
+    network: xdai
+    source:
+      address: "0x177127622c4A00F3d409B75571e12cB3c8973d3c"
+      abi: CowProtocolToken
+      startBlock: 20588746
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - Transfer
+      abis:
+        - name: CowProtocolToken
+          file: ./abis/CowProtocolToken.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/mapping.ts

@@ -1,0 +1,10 @@
+type Holder @entity {
+  id: ID! # address
+  balance: BigInt!
+}
+
+type Supply @entity {
+  id: ID! # Token Address
+  total: BigInt!
+  circulating: BigInt!
+}
