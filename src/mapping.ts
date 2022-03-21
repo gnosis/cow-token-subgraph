@@ -1,8 +1,5 @@
 import { Address, BigInt, log } from "@graphprotocol/graph-ts";
-import {
-  Approval,
-  Transfer,
-} from "../generated/CowProtocolToken/CowProtocolToken";
+import { Transfer } from "../generated/CowProtocolToken/CowProtocolToken";
 import { Holder, Supply } from "../generated/schema";
 
 export const COW_TOKEN = "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB";
