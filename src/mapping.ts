@@ -5,8 +5,8 @@ import {
 } from "../generated/CowProtocolToken/CowProtocolToken";
 import { Holder, Supply } from "../generated/schema";
 
-const COW_TOKEN = "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB";
-const NON_CIRCULATING = [
+export const COW_TOKEN = "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB";
+export const NON_CIRCULATING = [
   // Vested tokens (vCOW token address)
   Address.fromString("0xD057B63f5E69CF1B929b356b579Cba08D7688048"),
   // Solver Rewards
@@ -30,9 +30,8 @@ export function loadOrCreateHolder(address: Address): Holder {
 export function saveNonZero(holder: Holder): void {
   if (holder.id != Address.zero().toHex()) {
     holder.save();
-  } else {
-    log.info("Excluded Null address from internal!", []);
   }
+  // do not save updates to null address balance.
 }
 
 export function loadOrCreateSupply(): Supply {
@@ -66,10 +65,10 @@ export function supplyTriggeringTransfer(from: Address, to: Address): bool {
 }
 
 export function updateSupply(from: Address, to: Address, amount: BigInt): void {
-  log.warning("Got supply update event {}, {}, {}", [
+  log.info("Token Supply update {} moved from {} to {}", [
+    amount.toString(),
     from.toHex(),
     to.toHex(),
-    amount.toString(),
   ]);
   const supply = loadOrCreateSupply();
   if (from == Address.zero()) {
