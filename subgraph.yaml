@@ -17,7 +17,7 @@ dataSources:
         - Transfer
       abis:
         - name: CowProtocolToken
-          file: ./abis/ CowProtocolToken.json
+          file: ./abis/CowProtocolToken.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
