@@ -44,17 +44,6 @@ export function loadOrCreateSupply(): Supply {
   return supply;
 }
 
-export function nonCirculatingSupply(): BigInt {
-  const vestingContract = loadOrCreateHolder(
-    Address.fromString("0xD057B63f5E69CF1B929b356b579Cba08D7688048")
-  );
-  const devCoSafe = loadOrCreateHolder(
-    Address.fromString("0xA03be496e67Ec29bC62F01a428683D7F9c204930")
-  );
-
-  return vestingContract.balance.plus(devCoSafe.balance);
-}
-
 export function supplyTriggeringTransfer(from: Address, to: Address): bool {
   const zero = Address.zero();
   const mintOrBurn = from == zero || to == zero;
