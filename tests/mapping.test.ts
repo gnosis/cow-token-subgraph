@@ -19,22 +19,45 @@ const TWO = BigInt.fromI32(2);
 
 class TestStore {
   holders: Holder[];
+  nonCirculatingHolders: Holder[];
   supply: Supply;
 }
 
 function setupStore(): TestStore {
-  /// Two Mint 2000 tokens with half going to a regular account
-  //  and the other half in a non-circulating account: Store Results in
+  // Mint 4000 tokens
+  // - 1000 to each of the first two regular accounts and
+  // - 1000 to each of the first two non-circulating accounts
+  // Yields an initial store as follows:
   // {
   //   "Holder": {
   //     "0x0000000000000000000000000000000000000001": {
-  //       "balance": {
-  //         "type": "BigInt",
-  //         "data": "1000"
-  //       },
   //       "id": {
   //         "type": "String",
   //         "data": "0x0000000000000000000000000000000000000001"
+  //       },
+  //       "balance": {
+  //         "type": "BigInt",
+  //         "data": "1000"
+  //       }
+  //     },
+  //     "0xca771eda0c70aa7d053ab1b25004559b918fe662": {
+  //       "id": {
+  //         "type": "String",
+  //         "data": "0xca771eda0c70aa7d053ab1b25004559b918fe662"
+  //       },
+  //       "balance": {
+  //         "type": "BigInt",
+  //         "data": "1000"
+  //       }
+  //     },
+  //     "0x0000000000000000000000000000000000000002": {
+  //       "id": {
+  //         "type": "String",
+  //         "data": "0x0000000000000000000000000000000000000002"
+  //       },
+  //       "balance": {
+  //         "type": "BigInt",
+  //         "data": "1000"
   //       }
   //     },
   //     "0xd057b63f5e69cf1b929b356b579cba08d7688048": {
@@ -52,56 +75,72 @@ function setupStore(): TestStore {
   //     "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB": {
   //       "circulating": {
   //         "type": "BigInt",
-  //         "data": "1000"
+  //         "data": "2000"
+  //       },
+  //       "total": {
+  //         "type": "BigInt",
+  //         "data": "4000"
   //       },
   //       "id": {
   //         "type": "String",
   //         "data": "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB"
-  //       },
-  //       "total": {
-  //         "type": "BigInt",
-  //         "data": "2000"
   //       }
   //     }
   //   }
   // }
+
   const amount = BigInt.fromI32(1000);
   let transferEvents = [
     mockTransferEvent(Address.zero(), REGULAR_ACCOUNT[0], amount, "0x"),
+    mockTransferEvent(Address.zero(), REGULAR_ACCOUNT[1], amount, "0x"),
     mockTransferEvent(Address.zero(), NON_CIRCULATING[0], amount, "0x"),
+    mockTransferEvent(Address.zero(), NON_CIRCULATING[1], amount, "0x"),
   ];
   handleMultipleTransfers(transferEvents);
 
   const holder1 = new Holder(REGULAR_ACCOUNT[0].toHex());
   holder1.balance = amount;
-  const holder2 = new Holder(NON_CIRCULATING[0].toHex());
+  const holder2 = new Holder(REGULAR_ACCOUNT[1].toHex());
   holder2.balance = amount;
 
+  const nonCirculating1 = new Holder(NON_CIRCULATING[0].toHex());
+  nonCirculating1.balance = amount;
+  const nonCirculating2 = new Holder(NON_CIRCULATING[1].toHex());
+  nonCirculating2.balance = amount;
+
   const supply = new Supply(COW_TOKEN);
-  supply.circulating = amount;
-  supply.total = amount.times(TWO);
+  supply.circulating = amount.times(TWO);
+  supply.total = amount.times(TWO).times(TWO);
 
   return {
     holders: [holder1, holder2],
+    nonCirculatingHolders: [nonCirculating1, nonCirculating2],
     supply,
   };
 }
 
 test("Test Setup", () => {
   const testStore = setupStore();
-  logStore();
-  assert.fieldEquals(
-    "Holder",
-    REGULAR_ACCOUNT[0].toHex(),
-    "balance",
-    testStore.holders[0].balance.toString()
-  );
-  assert.fieldEquals(
-    "Holder",
-    NON_CIRCULATING[0].toHex(),
-    "balance",
-    testStore.holders[1].balance.toString()
-  );
+  const holders = testStore.holders;
+  const nonCirculatingHolders = testStore.nonCirculatingHolders;
+
+  for (let i = 0; i < holders.length; i++) {
+    assert.fieldEquals(
+      "Holder",
+      holders[i].id,
+      "balance",
+      holders[i].balance.toString()
+    );
+  }
+  for (let i = 0; i < nonCirculatingHolders.length; i++) {
+    assert.fieldEquals(
+      "Holder",
+      nonCirculatingHolders[i].id,
+      "balance",
+      nonCirculatingHolders[i].balance.toString()
+    );
+  }
+
   assert.fieldEquals(
     "Supply",
     COW_TOKEN,
@@ -150,22 +189,34 @@ test("Minting correctly updates the supply", () => {
   clearStore();
 });
 
-test("Burning correctly updates the supply", () => {
+test("Burning correctly updates the supply and balance", () => {
   const testStore = setupStore();
   const amount = BigInt.fromI32(400);
+  const tokenBurner = testStore.holders[0];
   const burnTransfer = mockTransferEvent(
-    REGULAR_ACCOUNT[0],
+    Address.fromString(tokenBurner.id),
     Address.zero(),
     amount,
     "0x"
   );
   handleTransfer(burnTransfer);
-  const expectedCirculating = testStore.supply.circulating.minus(amount);
+  assert.fieldEquals(
+    "Supply",
+    COW_TOKEN,
+    "total",
+    testStore.supply.total.minus(amount).toString()
+  );
   assert.fieldEquals(
     "Supply",
     COW_TOKEN,
     "circulating",
-    expectedCirculating.toString()
+    testStore.supply.circulating.minus(amount).toString()
+  );
+  assert.fieldEquals(
+    "Holder",
+    testStore.holders[0].id,
+    "balance",
+    tokenBurner.balance.minus(amount).toString()
   );
 
   clearStore();
@@ -175,27 +226,32 @@ test("Generic Transfers update balances and do not affect supply", () => {
   const testStore = setupStore();
   const circulatingSupply = testStore.supply.circulating.toString();
   const totalSupply = testStore.supply.total.toString();
+  const regularHolder1 = testStore.holders[0];
+  const regularHolder2 = testStore.holders[1];
+
   const amount = BigInt.fromI32(500);
   const regularTransfer = mockTransferEvent(
-    REGULAR_ACCOUNT[0],
-    REGULAR_ACCOUNT[1],
+    Address.fromString(regularHolder1.id),
+    Address.fromString(regularHolder2.id),
     amount,
     "0x"
   );
   handleTransfer(regularTransfer);
+
   // Holder balances
   assert.fieldEquals(
     "Holder",
-    REGULAR_ACCOUNT[0].toHex(),
+    regularHolder1.id,
     "balance",
-    testStore.holders[0].balance.minus(amount).toString()
+    regularHolder1.balance.minus(amount).toString()
   );
   assert.fieldEquals(
     "Holder",
-    REGULAR_ACCOUNT[1].toHex(),
+    regularHolder2.id,
     "balance",
-    amount.toString()
+    regularHolder2.balance.plus(amount).toString()
   );
+
   // Supply Unchanged
   assert.fieldEquals("Supply", COW_TOKEN, "circulating", circulatingSupply);
   assert.fieldEquals("Supply", COW_TOKEN, "total", totalSupply);
@@ -207,10 +263,13 @@ test("Transfers between non-circulating supply update balances and do not affect
   const testStore = setupStore();
   const circulatingSupply = testStore.supply.circulating.toString();
   const totalSupply = testStore.supply.total.toString();
+  const nonCirculating1 = testStore.nonCirculatingHolders[0];
+  const nonCirculating2 = testStore.nonCirculatingHolders[1];
+
   const amount = BigInt.fromI32(500);
   const regularTransfer = mockTransferEvent(
-    NON_CIRCULATING[0],
-    NON_CIRCULATING[1],
+    Address.fromString(nonCirculating1.id),
+    Address.fromString(nonCirculating2.id),
     amount,
     "0x"
   );
@@ -218,15 +277,15 @@ test("Transfers between non-circulating supply update balances and do not affect
   // Holder balances
   assert.fieldEquals(
     "Holder",
-    NON_CIRCULATING[0].toHex(),
+    nonCirculating1.id,
     "balance",
-    testStore.holders[0].balance.minus(amount).toString()
+    nonCirculating1.balance.minus(amount).toString()
   );
   assert.fieldEquals(
     "Holder",
-    NON_CIRCULATING[1].toHex(),
+    nonCirculating2.id,
     "balance",
-    amount.toString()
+    nonCirculating2.balance.plus(amount).toString()
   );
   // Supply Unchanged
   assert.fieldEquals("Supply", COW_TOKEN, "circulating", circulatingSupply);
@@ -235,30 +294,34 @@ test("Transfers between non-circulating supply update balances and do not affect
   clearStore();
 });
 
-test("Transfers from non-circulating to regular accounts supply update balances and update supply", () => {
+test("Transfers from non-circulating to regular accounts updates balances and supply", () => {
   const testStore = setupStore();
-  const circulatingSupply = testStore.supply.circulating;
+  const circulatingSupplyBefore = testStore.supply.circulating;
   const totalSupply = testStore.supply.total.toString();
+  const nonCirculatingHolder = testStore.nonCirculatingHolders[0];
+  const regularHolder = testStore.holders[0];
+
   const amount = BigInt.fromI32(500);
-  const regularTransfer = mockTransferEvent(
-    NON_CIRCULATING[0],
-    REGULAR_ACCOUNT[1],
+  const irregularTransfer = mockTransferEvent(
+    Address.fromString(nonCirculatingHolder.id),
+    Address.fromString(regularHolder.id),
     amount,
     "0x"
   );
-  handleTransfer(regularTransfer);
+  handleTransfer(irregularTransfer);
+
   // Holder balances
   assert.fieldEquals(
     "Holder",
-    NON_CIRCULATING[0].toHex(),
+    nonCirculatingHolder.id,
     "balance",
-    testStore.holders[0].balance.minus(amount).toString()
+    nonCirculatingHolder.balance.minus(amount).toString()
   );
   assert.fieldEquals(
     "Holder",
-    REGULAR_ACCOUNT[1].toHex(),
+    regularHolder.id,
     "balance",
-    amount.toString()
+    regularHolder.balance.plus(amount).toString()
   );
   // Total Supply Unchanged
   assert.fieldEquals("Supply", COW_TOKEN, "total", totalSupply);
@@ -267,7 +330,49 @@ test("Transfers from non-circulating to regular accounts supply update balances 
     "Supply",
     COW_TOKEN,
     "circulating",
-    circulatingSupply.plus(amount).toString()
+    circulatingSupplyBefore.plus(amount).toString()
+  );
+
+  clearStore();
+});
+
+test("Transfers from regular to non-circulating accounts updates balances and supply", () => {
+  const testStore = setupStore();
+  const circulatingSupplyBefore = testStore.supply.circulating;
+  const totalSupply = testStore.supply.total.toString();
+  const nonCirculatingHolder = testStore.nonCirculatingHolders[0];
+  const regularHolder = testStore.holders[0];
+
+  const amount = BigInt.fromI32(500);
+  const irregularTransfer = mockTransferEvent(
+    Address.fromString(regularHolder.id),
+    Address.fromString(nonCirculatingHolder.id),
+    amount,
+    "0x"
+  );
+  handleTransfer(irregularTransfer);
+
+  // Holder balances
+  assert.fieldEquals(
+    "Holder",
+    regularHolder.id,
+    "balance",
+    regularHolder.balance.minus(amount).toString()
+  );
+  assert.fieldEquals(
+    "Holder",
+    nonCirculatingHolder.id,
+    "balance",
+    nonCirculatingHolder.balance.plus(amount).toString()
+  );
+  // Total Supply Unchanged
+  assert.fieldEquals("Supply", COW_TOKEN, "total", totalSupply);
+  // Circulating supply increase
+  assert.fieldEquals(
+    "Supply",
+    COW_TOKEN,
+    "circulating",
+    circulatingSupplyBefore.minus(amount).toString()
   );
 
   clearStore();

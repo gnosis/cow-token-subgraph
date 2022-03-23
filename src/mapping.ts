@@ -9,6 +9,7 @@ export const NON_CIRCULATING = [
   // Vested tokens (vCOW token address)
   Address.fromString("0xD057B63f5E69CF1B929b356b579Cba08D7688048"),
   // TODO - add GnosisDAO Vesting contract TBD
+  // Address.fromString(""),
 ];
 
 export function loadOrCreateHolder(address: Address): Holder {
