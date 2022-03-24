@@ -12,15 +12,23 @@ describe("handleSupplyQuery", function() {
   it("request returns expected results at deployment block", async function() {
     const result = await handleSupplyQuery(deployBlock.toString());
     expect(result).to.deep.equal({
-      supply: {
-        total: "1000000000000000000000000000",
-        circulating: "1000000000000000000",
-      },
+      total: "1000000000000000000000000000",
+      circulating: "1000000000000000000",
     });
   });
 
   it("request returns expected results before deployment block", async function() {
     const result = await handleSupplyQuery((deployBlock - 1).toString());
-    expect(result).to.deep.equal({ supply: null });
+    expect(result).to.deep.equal(null);
+  });
+
+  it("request returns null for future blocks", async function() {
+    // Temporarily disable console error.
+    const err = console.error;
+    console.error = () => {};
+    const result = await handleSupplyQuery("99999999999999999999999");
+    expect(result).to.deep.equal(null);
+    // restore console error
+    console.error = err;
   });
 });

@@ -27,11 +27,18 @@ export type Supply = {
 };
 
 // Queries the subgraph for Supply.
-export async function handleSupplyQuery(blockNum?: string): Promise<Supply> {
+export async function handleSupplyQuery(
+  blockNum?: string
+): Promise<Supply | null> {
   const query = supplyQuery(blockNum);
   const client = new GraphQLClient(API_URL);
-  const response = await client.request(query);
-  return response;
+  try {
+    const { supply } = await client.request(query);
+    return supply;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
 }
 
 // Returns current Token Supply (i.e. at latest block)
