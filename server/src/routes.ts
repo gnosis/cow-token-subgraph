@@ -56,13 +56,13 @@ routes.get("/supply/:blockNum", async (req, res) => {
 routes.get("/total-supply", async (_, res) => {
   const supply = await handleSupplyQuery();
   res.setHeader("content-type", "text/plain");
-  return res.json(formatTokenUnit(supply.total));
+  return res.send(formatTokenUnit(supply.total));
 });
 
 routes.get("/circulating-supply", async (_, res) => {
   const supply = await handleSupplyQuery();
   res.setHeader("content-type", "text/plain");
-  return res.json(formatTokenUnit(supply.circulating));
+  return res.send(formatTokenUnit(supply.circulating));
 });
 
 export default routes;
