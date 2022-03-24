@@ -11,7 +11,7 @@ export function supplyQuery(blockNum?: string): string {
   const whereClause =
     blockNum === undefined
       ? `(id: "${COW_TOKEN}")`
-      : ` (id: "${COW_TOKEN}" block: {number: ${blockNum}})`;
+      : `(id: "${COW_TOKEN}" block: {number: ${blockNum}})`;
   return gql`
   {
     supply ${whereClause} {
