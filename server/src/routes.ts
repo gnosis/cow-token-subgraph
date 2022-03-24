@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { GraphQLClient, gql } from "graphql-request";
 
+import { formatTokenUnit } from "./util";
+
 const API_URL =
   "https://api.thegraph.com/subgraphs/name/bh2smith/cow-token-mainnet";
 const COW_TOKEN = "0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB";
@@ -49,6 +51,18 @@ routes.get("/supply", async (_, res) => {
 // Return Token Supply at given block
 routes.get("/supply/:blockNum", async (req, res) => {
   return res.json(await handleSupplyQuery(req.params.blockNum));
+});
+
+routes.get("/total-supply", async (_, res) => {
+  const supply = await handleSupplyQuery();
+  res.setHeader("content-type", "text/plain");
+  return res.json(formatTokenUnit(supply.total));
+});
+
+routes.get("/circulating-supply", async (_, res) => {
+  const supply = await handleSupplyQuery();
+  res.setHeader("content-type", "text/plain");
+  return res.json(formatTokenUnit(supply.circulating));
 });
 
 export default routes;
