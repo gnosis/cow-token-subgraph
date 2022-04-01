@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Tiny API",
   "author": "Ben Smith <ben@cow.fi>",
+  "license": "MIT OR Apache-2.0",
   "scripts": {
     "build": "esbuild src/server.ts --platform=node --bundle --minify --outfile=dist/server.js",
     "start:dev": "nodemon src/server.ts",

@@ -1,6 +1,6 @@
 {
   "name": "cow-token-mainnet",
-  "license": "UNLICENSED",
+  "license": "MIT OR Apache-2.0",
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph codegen && graph build",
